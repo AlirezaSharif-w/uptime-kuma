@@ -1,0 +1,36 @@
+name: Sync with Upstream
+
+on:
+  schedule:
+    - cron: '0 0 * * 1' # Runs weekly at midnight UTC on Monday
+  workflow_dispatch: # Allows manual triggering of the workflow
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout the Repo
+      uses: actions/checkout@v3
+      with:
+        persist-credentials: false # Required for forked repos
+        fetch-depth: 0
+
+    - name: Set up Git
+      run: |
+        git config --global user.name "github-actions[bot]"
+        git config --global user.email "github-actions[bot]@users.noreply.github.com"
+
+    - name: Add Upstream Repo
+      run: git remote add upstream https://github.com/louislam/uptime-kuma.git
+
+    - name: Fetch Upstream
+      run: git fetch upstream
+
+    - name: Merge Upstream into Main
+      run: git merge upstream/main --no-edit
+
+    - name: Push Changes to Fork
+      run: git push origin main
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
